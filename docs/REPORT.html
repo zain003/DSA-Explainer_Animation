@@ -1,13 +1,182 @@
-<!DOCTYPE html>
-<html><head><meta charset="utf-8">
-<title>Project Report: Data Structure Explainer</title>
-<style>
-  body { font-family: Segoe UI, Arial, sans-serif; font-size: 11pt; line-height: 1.45; color: #111; max-width: 800px; margin: 24px auto; padding: 0 16px; }
-  h1 { font-size: 20pt; } h2 { font-size: 14pt; margin-top: 1.4em; } h3 { font-size: 12pt; }
-  table { border-collapse: collapse; width: 100%; margin: 12px 0; font-size: 10pt; }
-  th, td { border: 1px solid #444; padding: 6px 8px; text-align: left; vertical-align: top; }
-  th { background: #eee; }
-  code, pre { font-family: Consolas, monospace; font-size: 9.5pt; }
-  pre { background: #f5f5f5; padding: 10px; white-space: pre-wrap; }
-  a { color: #0645ad; }
-</style></head><body>{body}</body></html>
+<!DOCTYPE html><html><head><meta charset='utf-8'><title>Project Report: Data Structure Explainer</title><style>
+body { font-family: Segoe UI, Arial, sans-serif; font-size: 11pt; line-height: 1.45;
+       color: #111; max-width: 800px; margin: 24px auto; padding: 0 16px; }
+h1 { font-size: 20pt; } h2 { font-size: 14pt; margin-top: 1.4em; } h3 { font-size: 12pt; }
+table { border-collapse: collapse; width: 100%; margin: 12px 0; font-size: 10pt; }
+th, td { border: 1px solid #444; padding: 6px 8px; text-align: left; vertical-align: top; }
+th { background: #eee; }
+code, pre { font-family: Consolas, monospace; font-size: 9.5pt; }
+pre { background: #f5f5f5; padding: 10px; white-space: pre-wrap; }
+a { color: #0645ad; }
+</style></head><body><h1>Project Report: Data Structure Explainer</h1>
+<p><strong>Course project:</strong> Project 1 — Data Structure Explainer<br />
+<strong>Repository:</strong> https://github.com/zain003/DSA-Explainer_Animation  </p>
+<p><strong>Group members:</strong> Zain Ali Khan (22i2624, Section B); Rafay Ul Haq (22i2520, Section B).</p>
+<hr />
+<h2>1. Introduction</h2>
+<p>This product teaches Data Structures and Algorithms through <strong>narrated, animated videos</strong>. A learner types a natural-language topic (for example, “how does a queue work” or “show BFS on this graph”). The system plans a lesson, writes narration, draws animation from a structured scene plan, synthesizes voice <strong>locally</strong>, and exports a video (≥ 30 seconds) with a short quiz.</p>
+<p>Covered topics: linked lists, stacks, queues, trees (BST), graph BFS, and bubble sort.</p>
+<hr />
+<h2>2. Core Modules</h2>
+<h3>2.1 Lesson planner</h3>
+<p>Takes a topic and learner level and produces a structured <code>LessonPlan</code> JSON (scenes, actions, narration hints, quiz). Plans are validated against a Pydantic schema before any rendering. In offline mode, deterministic templates are used; with an API key, an OpenAI-compatible LLM can propose plans that must still pass verification.</p>
+<h3>2.2 Animation renderer</h3>
+<p><strong>Manim</strong> draws only declared <code>ActionType</code> values (e.g. <code>enqueue</code>, <code>bfs_visit</code>, <code>swap</code>). The language model never draws freely; the renderer is the sole drawing authority.</p>
+<h3>2.3 Step verifier</h3>
+<p>Executes real data-structure / algorithm code in Python and checks each action’s <code>expected_state</code>. A mismatch <strong>blocks export</strong> — a wrong video is worse than no video.</p>
+<h3>2.4 Narration and voice</h3>
+<p>Narration is stored per scene and synchronized with animation timing. <strong>Text-to-speech runs locally via Piper</strong> (<code>piper-tts</code> + ONNX voice). Cloud TTS is not used.</p>
+<h3>2.5 Quiz generator</h3>
+<p>Builds multiple-choice questions from the lesson. Correct answers are checked against live structure execution where applicable; unverified items are dropped.</p>
+<h3>2.6 Revision control</h3>
+<p>Utterances such as “slow down step 4” or “explain it for a beginner” update only the targeted scene(s), then re-verify and re-export.</p>
+<hr />
+<h2>3. Setup and Technical Details</h2>
+<h3>3.1 Stack</h3>
+<table>
+<thead>
+<tr>
+<th>Layer</th>
+<th>Choice</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Language</td>
+<td>Python 3.10+</td>
+</tr>
+<tr>
+<td>Schema / validation</td>
+<td>Pydantic v2</td>
+</tr>
+<tr>
+<td>Planner</td>
+<td>Offline templates + optional OpenAI-compatible API</td>
+</tr>
+<tr>
+<td>Verifier</td>
+<td>In-process DS implementations</td>
+</tr>
+<tr>
+<td>Renderer</td>
+<td>Manim Community + FFmpeg</td>
+</tr>
+<tr>
+<td>TTS</td>
+<td>Piper (<code>en_US-lessac-medium</code>) local</td>
+</tr>
+<tr>
+<td>UI</td>
+<td>Gradio (optional) + Typer CLI</td>
+</tr>
+<tr>
+<td>Tests</td>
+<td>pytest</td>
+</tr>
+</tbody>
+</table>
+<h3>3.2 Setup (summary)</h3>
+<pre><code class="language-bash">python -m venv .venv
+.venv\Scripts\activate          # Windows
+pip install -e &quot;.[dev]&quot;
+copy .env.example .env
+python -m piper.download_voices en_US-lessac-medium --data-dir assets/voices
+# FFmpeg required on PATH
+dsa-explainer ui                # or: dsa-explainer generate &quot;how does a queue work&quot; --offline
+pytest -q
+</code></pre>
+<h3>3.3 What runs locally vs remotely</h3>
+<ul>
+<li><strong>Local:</strong> planning templates, schema validation, step verifier, Piper TTS, Manim render, quiz checks, Gradio/CLI UI, revision.</li>
+<li><strong>Optional remote:</strong> OpenAI-compatible chat API for planning / narration polish only (not required; <code>--offline</code> is default for demos).</li>
+</ul>
+<h3>3.4 Pipeline</h3>
+<pre><code>topic → LessonPlan JSON → validate → verify steps → Piper WAV per scene
+      → Manim render → lesson.mp4 + quiz → optional revise → re-verify → re-render
+</code></pre>
+<p>Architecture diagram: <a href="architecture.svg"><code>architecture.svg</code></a> (also embedded in <code>README.md</code>).</p>
+<hr />
+<h2>4. Critical Analysis</h2>
+<h3>4.1 Problem Statement</h3>
+<p><strong>Real-world gap.</strong> Students often learn DSA from static slides, text, or generic YouTube videos that are not personalized to a typed question, learner level, or a specific example graph/array. Interactive coding sites show code but rarely produce a coherent, narrated visual lesson on demand.</p>
+<p><strong>Why a “standard” LLM chat solution fails.</strong> Asking a chatbot to “explain queues” or even to emit raw Manim/Remotion code is unsafe for teaching:
+- Models hallucinate algorithm steps and edge cases.
+- Free-form drawing or free-form animation code can look polished while being <strong>factually wrong</strong>.
+- There is no hard gate that the on-screen state matches a real data structure.</p>
+<p>This project targets that gap: <strong>on-demand video</strong> with a <strong>verified</strong> scene plan, so incorrect explanations are rejected before export.</p>
+<h3>4.2 Complexity Drivers</h3>
+<ol>
+<li><strong>Conflicting requirements:</strong> Use LLMs for flexible planning/writing, but forbid free-form drawing and forbid shipping wrong content.</li>
+<li><strong>No single obvious stack:</strong> Planner, verifier, renderer, TTS, and quiz each have independent failure modes and must agree on one schema.</li>
+<li><strong>Temporal sync:</strong> Narration length, animation beats, and ≥30s minimum must stay consistent after local TTS.</li>
+<li><strong>Partial revision:</strong> Learners expect to change one step without regenerating an unrelated lesson from scratch, while re-verification must still pass.</li>
+<li><strong>Local TTS constraint:</strong> Voice quality and latency must be acceptable without cloud speech APIs.</li>
+</ol>
+<h3>4.3 Design Justification (alternatives considered)</h3>
+<p><strong>Alternative A — LLM emits Manim/Remotion source code directly.</strong><br />
+<em>Rejected.</em> High flexibility, but verification of arbitrary code is intractable; a single off-by-one in generated animation code can teach the wrong algorithm. We instead constrain the LLM (or templates) to a <strong>closed action vocabulary</strong> and render that vocabulary ourselves.</p>
+<p><strong>Alternative B — Remotion (React) instead of Manim.</strong><br />
+<em>Rejected for this team/timeline.</em> Remotion is excellent for web-native video, but Python already hosts the verifier and Piper integration; Manim is the academic default for algorithm animation and kept the stack in one language. Remotion remains a viable future port of the same JSON scene plan.</p>
+<p><strong>Alternative C — Cloud TTS (e.g. commercial neural voices).</strong><br />
+<em>Rejected.</em> The brief requires <strong>local</strong> TTS. Piper satisfies the rule with acceptable quality; espeak/tone remain emergency fallbacks only.</p>
+<p><strong>Alternative D — Skip formal verification; rely on prompt engineering.</strong><br />
+<em>Rejected.</em> Prompting alone cannot guarantee correctness. The product rule is explicit: a wrong video is worse than no video.</p>
+<h3>4.4 Trade-off Analysis</h3>
+<table>
+<thead>
+<tr>
+<th>Trade-off</th>
+<th>Choice</th>
+<th>Reason</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Flexibility vs safety</td>
+<td>Closed <code>ActionType</code> schema</td>
+<td>Safety and verifiability over open-ended drawing</td>
+</tr>
+<tr>
+<td>Offline templates vs LLM plans</td>
+<td>Templates default; LLM optional</td>
+<td>Deterministic demos + API when available; both must verify</td>
+</tr>
+<tr>
+<td>Voice quality vs locality</td>
+<td>Piper ONNX local</td>
+<td>Meets assignment; no audio leaves the machine</td>
+</tr>
+<tr>
+<td>Render quality vs speed</td>
+<td>Manim 480p default (<code>-ql</code>)</td>
+<td>Fast iteration for demos; quality flag can raise to 720p/1080p</td>
+</tr>
+<tr>
+<td>Full regenerate vs patch</td>
+<td>Scene-level revision</td>
+<td>Faster feedback; still full verify on the revised plan</td>
+</tr>
+<tr>
+<td>UI polish vs scope</td>
+<td>Gradio + CLI</td>
+<td>Spec does not require a UI; Gradio added for product demos without a large frontend</td>
+</tr>
+</tbody>
+</table>
+<h3>4.5 Societal and Ethical Impact</h3>
+<p><strong>Privacy.</strong> Lesson topics and optional API prompts may reveal what a student is studying. Offline mode keeps planning local; Piper keeps voice local. If an LLM API is enabled, prompts leave the device — documented in the README; students should avoid pasting personal data into topics.</p>
+<p><strong>Safety / educational integrity.</strong> Incorrect algorithm instruction can harm exam performance and mental models. The verifier is an ethical control: we prefer refusal over confident false animation. Residual risk remains for soft narration wording that does not change <code>expected_state</code>; quizzes are used to reinforce checked facts.</p>
+<p><strong>Fairness / access.</strong> Local TTS and offline templates reduce dependence on paid APIs, which helps students with limited cloud budget. Hardware still matters (CPU for Manim/Piper). Voice models and English-centric narration may underserve non-English learners — a limitation to address with more Piper locales.</p>
+<p><strong>Legal / copyright.</strong> Generated videos are original renders from our plan/renderer. Third-party model/voice licenses (OpenAI ToS if used; Piper voice model cards) must be respected for redistribution. Course submission should not redistribute proprietary voice weights if a license forbids it; we document download steps instead of vendoring large binaries where inappropriate.</p>
+<p><strong>Misuse.</strong> Automated “explanation videos” could be submitted as a student’s own coursework. The tool is intended as a <strong>learning aid</strong>; institutions may need disclosure policies similar to other generative tools.</p>
+<hr />
+<h2>5. Testing</h2>
+<p>Automated tests (<code>pytest</code>) cover:
+- Topic detection and offline planning<br />
+- Verification of all topic templates<br />
+- Quiz answer verification<br />
+- Revision parsing and scene-local updates  </p>
+<p>Manual demos: CLI generate, Gradio UI, revision commands, inspection of <code>verification.json</code> and <code>lesson.mp4</code>.</p>
+<hr />
+<h2>6. Conclusion</h2>
+<p>The Data Structure Explainer meets the project brief by combining structured planning, hard step verification, local Piper narration, Manim rendering, quizzes, and revision. The central design thesis — <strong>models propose, code verifies, renderer draws</strong> — is what makes on-demand DSA video safer than chat-only or free-form animation generation.</p></body></html>
