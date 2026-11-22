@@ -3,7 +3,7 @@
 **Course project:** Project 1 — Data Structure Explainer  
 **Repository:** https://github.com/zain003/DSA-Explainer_Animation  
 
-> **Group members:** fill names and registration numbers in `README.md` (same table).
+**Group members:** Zain Ali Khan (22i2624, Section B); Rafay Ul Haq (22i2520, Section B).
 
 ---
 

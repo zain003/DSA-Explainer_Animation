@@ -14,14 +14,10 @@ Wrong plans are refused — a wrong video is worse than no video.
 
 ## 1. Group members
 
-| Name | Registration number | Role (optional) |
-|------|---------------------|-----------------|
-| _Member 1 — replace with full name_ | _Reg. No._ | |
-| _Member 2 — replace with full name_ | _Reg. No._ | |
-| _Member 3 — replace with full name_ | _Reg. No._ | |
-| _Member 4 — replace with full name_ | _Reg. No._ | |
-
-> Replace the placeholder rows with your group’s real names and registration numbers before final submission.
+| Name | Registration number | Section |
+|------|---------------------|---------|
+| Zain Ali Khan | 22i2624 | B |
+| Rafay Ul Haq | 22i2520 | B |
 
 ---
 
@@ -141,7 +137,7 @@ Artifacts: `output/lessons/<id>/plan.json`, `verification.json`, `audio/`, `less
 - [x] Documentation (`README.md`, `docs/REPORT.md`)  
 - [x] Tests (`tests/`, pytest)  
 - [x] System architecture diagram (`docs/architecture.svg` + mermaid above)  
-- [ ] Group member names + registration numbers filled in the table above  
+- [x] Group member names + registration numbers filled in the table above  
 - [ ] 2–3 minute Loom demo recorded and link pasted at the top (`docs/LOOM_DEMO_SCRIPT.md`)  
 
 ---
