@@ -1,0 +1,84 @@
+{
+  "topic": "how does a queue work",
+  "topic_kind": "queue",
+  "learner_level": "beginner",
+  "learning_objectives": [
+    "Define FIFO",
+    "Perform enqueue and dequeue",
+    "Identify front and rear"
+  ],
+  "scenes": [
+    {
+      "id": "s1",
+      "title": "What is a Queue?",
+      "narration": "A queue is a First In First Out structure. Think of a line at a ticket counter.",
+      "duration_hint_sec": 8.0,
+      "actions": [
+        {"type": "title", "args": {"text": "Queues: FIFO"}},
+        {
+          "type": "create_queue",
+          "args": {"values": []},
+          "expected_state": {"type": "queue", "items": [], "front": null, "rear": null}
+        }
+      ]
+    },
+    {
+      "id": "s2",
+      "title": "Enqueue",
+      "narration": "Enqueue ten, then twenty. Front is ten. Rear is twenty.",
+      "duration_hint_sec": 8.0,
+      "actions": [
+        {
+          "type": "enqueue",
+          "args": {"value": 10},
+          "expected_state": {"type": "queue", "items": [10], "front": 10, "rear": 10}
+        },
+        {
+          "type": "enqueue",
+          "args": {"value": 20},
+          "expected_state": {"type": "queue", "items": [10, 20], "front": 10, "rear": 20}
+        }
+      ]
+    },
+    {
+      "id": "s3",
+      "title": "Dequeue",
+      "narration": "Dequeue removes ten from the front. Twenty becomes the new front.",
+      "duration_hint_sec": 8.0,
+      "actions": [
+        {
+          "type": "dequeue",
+          "args": {},
+          "expected_state": {"type": "queue", "items": [20], "front": 20, "rear": 20}
+        }
+      ]
+    },
+    {
+      "id": "s4",
+      "title": "Summary",
+      "narration": "Remember: enqueue at the rear, dequeue from the front. That is FIFO.",
+      "duration_hint_sec": 8.0,
+      "actions": [
+        {
+          "type": "front",
+          "args": {},
+          "expected_state": {"type": "queue", "items": [20], "front": 20, "rear": 20}
+        }
+      ]
+    }
+  ],
+  "quiz": [
+    {
+      "id": "q1",
+      "prompt": "After enqueue 1, enqueue 2, dequeue — what is at the front?",
+      "options": [
+        {"id": "a", "text": "1"},
+        {"id": "b", "text": "2"},
+        {"id": "c", "text": "empty"}
+      ],
+      "correct_option_id": "b",
+      "explanation": "Dequeue removes 1; 2 becomes front.",
+      "verified": true
+    }
+  ]
+}
